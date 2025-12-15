@@ -7,3 +7,7 @@ dist
 install
 .idea
 **__pycache__
+
+.serena
+.venv
+.mypy_cache

@@ -103,7 +103,7 @@ class Updater(QObject):
         else:
             try:
                 from mkchromecast.version import __version__
-                import requests
+                import requests  # type: ignore[import-untyped]
 
                 response = requests.get(url).text.split(",")
 
