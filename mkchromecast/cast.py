@@ -74,18 +74,26 @@ class Casting:
 
         self.cast: Optional[pychromecast.Chromecast] = None
         self._chromecasts_by_name: dict[str, pychromecast.Chromecast] = {}
+        self._browser: Optional[Any] = None  # CastBrowser instance
         self.cclist: list[list[Any]] = []
         self.cast_to: str = ""
         self.index: int = 0
 
     def _get_chromecast_names(self) -> list[str]:
         chromecasts, browser = pychromecast.get_chromecasts(tries=self.mkcc.tries)
-        # Stop discovery after getting the list
-        browser.stop_discovery()
+        # Keep browser alive until connection is established
+        # stop_discovery() must be called after cast.wait()
+        self._browser = browser
 
         self._chromecasts_by_name = {c.name: c for c in chromecasts if c.name}
 
         return list(self._chromecasts_by_name.keys())
+
+    def _stop_discovery(self) -> None:
+        """Stop the mDNS discovery browser if it's running."""
+        if self._browser is not None:
+            self._browser.stop_discovery()
+            self._browser = None
 
     """
     Cast processes
@@ -229,6 +237,7 @@ class Casting:
 
         if not self.cast_to or self.cast_to not in self._chromecasts_by_name:
             self.cast = None
+            self._stop_discovery()
             print(colors.warning(f"No Chromecast found named {self.cast_to}"))
 
             if self.mkcc.platform == "Darwin":
@@ -249,6 +258,8 @@ class Casting:
         self.cast = self._chromecasts_by_name[self.cast_to]
         # Wait for cast device to be ready
         self.cast.wait()
+        # Now safe to stop discovery after connection is established
+        self._stop_discovery()
         print()
         print(
             colors.important("Status of device ")
