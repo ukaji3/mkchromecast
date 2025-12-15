@@ -332,17 +332,15 @@ class Casting:
             play_url, media_type, title=self.title, stream_type="LIVE",
         )
 
-        if media_controller.is_active:
-            media_controller.play()
+        # Note: play_media() with autoplay=True (default) starts playback
+        # automatically. Additional play() calls are not needed and can
+        # cause RequestTimeout errors with pychromecast >= 14.0.
 
         print(" ")
         print(colors.important("Cast media controller status"))
         print(" ")
         print(self.cast.status)
         print(" ")
-
-        time.sleep(5.0)
-        media_controller.play()
 
         if self.mkcc.hijack is True:
             self.r = Thread(target=self.hijack_cc)
