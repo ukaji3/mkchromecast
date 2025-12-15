@@ -563,7 +563,7 @@ _ActionGroup.add_argument(
     supported websites such as Dailymotion, LiveLeak, and Vimeo.
 
     For a comprehensive list, check:
-        http://rg3.github.io/yt-dlp/supportedsites.html.
+        https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md
 
     Example:
         python mkchromecast.py -y https://www.youtube.com/watch?v=NVvAJhZVBTc

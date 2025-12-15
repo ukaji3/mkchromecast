@@ -156,7 +156,6 @@ class Mkchromecast:
 
             self.codec = args.codec
 
-        # TODO(xsdg): Add support for yt-dlp
         command_choices = ["ffmpeg", "yt-dlp"]
         self.command: Optional[str]
         if not args.command:
@@ -233,10 +232,9 @@ class Mkchromecast:
                 You need to provide a URL that is supported by yt-dlp.
                 """
 
-                # TODO(xsdg): Switch to yt-dlp.
                 message = """
                 For a list of supported sources please visit:
-                    https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md?plain=1
+                    https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md
 
                 Note that the URLs have to start with https.
                 """
