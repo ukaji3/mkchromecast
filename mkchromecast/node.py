@@ -29,8 +29,9 @@ from mkchromecast.cast import Casting
 from mkchromecast.constants import OpMode
 
 
-def streaming(mkcc: mkchromecast.Mkchromecast):
-    print(colors.options("Selected backend:") + " " + mkcc.backend)
+def streaming(mkcc: mkchromecast.Mkchromecast) -> None:
+    backend_name = mkcc.backend or "node"
+    print(colors.options("Selected backend:") + " " + backend_name)
 
     if mkcc.debug is True:
         print(

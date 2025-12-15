@@ -73,17 +73,17 @@ class Casting:
         self.ip = utils.get_effective_ip(self.mkcc.platform, host_override=self.mkcc.host)
 
         self.cast: Optional[pychromecast.Chromecast] = None
-        self._chromecasts_by_name: dict[str, pychromecast.Chromecast]
+        self._chromecasts_by_name: dict[str, pychromecast.Chromecast] = {}
+        self.cclist: list[list[Any]] = []
+        self.cast_to: str = ""
+        self.index: int = 0
 
     def _get_chromecast_names(self) -> list[str]:
-        _chromecasts = pychromecast.get_chromecasts(tries=self.mkcc.tries)
+        chromecasts, browser = pychromecast.get_chromecasts(tries=self.mkcc.tries)
+        # Stop discovery after getting the list
+        browser.stop_discovery()
 
-        # since PR380, pychromecast.get_chromecasts returns a tuple
-        # see: https://github.com/home-assistant-libs/pychromecast/pull/380
-        if type(_chromecasts) == tuple:
-            _chromecasts = _chromecasts[0]
-
-        self._chromecasts_by_name = {c.name: c for c in _chromecasts}
+        self._chromecasts_by_name = {c.name: c for c in chromecasts if c.name}
 
         return list(self._chromecasts_by_name.keys())
 
@@ -91,7 +91,7 @@ class Casting:
     Cast processes
     """
 
-    def initialize_cast(self):
+    def initialize_cast(self) -> None:
         # This fixes the `No handlers could be found for logger
         # "pychromecast.socket_client` warning"`.
         # See commit 18005ebd4c96faccd69757bf3d126eb145687e0d.
@@ -132,16 +132,15 @@ class Casting:
                     "elif len(self.cclist) != 0 and self.mkcc.select_device == True"
                     " and self.mkcc.tray == False:"
                 )
-            if os.path.exists("/tmp/mkchromecast.tmp") is False:
-                self.tf = open("/tmp/mkchromecast.tmp", "wb")
+            if not os.path.exists("/tmp/mkchromecast.tmp"):
                 print(" ")
                 print_available_devices(self.available_devices)
             else:
                 if self.mkcc.debug is True:
                     print("else:")
-                self.tf = open("/tmp/mkchromecast.tmp", "rb")
-                self.index = pickle.load(self.tf)
-                self.cast_to = self.cclist[int(self.index)]
+                with open("/tmp/mkchromecast.tmp", "rb") as tf:
+                    self.index = pickle.load(tf)
+                self.cast_to = self.cclist[int(self.index)][1]
                 print(" ")
                 print(
                     colors.options("Casting to:") + " " + colors.success(self.cast_to)
@@ -154,15 +153,14 @@ class Casting:
                     "elif len(self.cclist) != 0 and self.mkcc.select_device == True"
                     "  and self.mkcc.tray == True:"
                 )
-            if os.path.exists("/tmp/mkchromecast.tmp") is False:
-                self.tf = open("/tmp/mkchromecast.tmp", "wb")
+            if not os.path.exists("/tmp/mkchromecast.tmp"):
                 print(" ")
                 print_available_devices(self.available_devices)
             else:
                 if self.mkcc.debug is True:
                     print("else:")
-                self.tf = open("/tmp/mkchromecast.tmp", "rb")
-                self.cast_to = pickle.load(self.tf)
+                with open("/tmp/mkchromecast.tmp", "rb") as tf:
+                    self.cast_to = pickle.load(tf)
                 print_available_devices(self.available_devices)
                 print(" ")
                 print(
@@ -185,21 +183,25 @@ class Casting:
         elif len(self.cclist) == 0 and self.mkcc.operation == OpMode.TRAY:
             print(colors.error(":::Tray::: No devices found!"))
 
-    def select_a_device(self):
+    def select_a_device(self) -> None:
         print(" ")
         print(
             "Please, select the "
             + colors.important("Index")
             + " of the Google Cast device that you want to use:"
         )
-        self.index = input()
+        user_input = input()
+        try:
+            self.index = int(user_input)
+        except ValueError:
+            self.index = 0
 
-    def input_device(self, write_to_pickle=True):
+    def input_device(self, write_to_pickle: bool = True) -> None:
         while True:
             try:
                 if write_to_pickle:
-                    pickle.dump(self.index, self.tf)
-                    self.tf.close()
+                    with open("/tmp/mkchromecast.tmp", "wb") as tf:
+                        pickle.dump(self.index, tf)
                 self.cast_to = self.cclist[int(self.index)][1]
                 print(" ")
                 print(
@@ -210,29 +212,22 @@ class Casting:
                 print(
                     colors.options("Casting to:")
                     + " "
-                    + colors.success(self.cast_to.player_name)
+                    + colors.success(str(self.cast_to))
                 )
             except IndexError:
                 checkmktmp()
-                self.tf = open("/tmp/mkchromecast.tmp", "wb")
-                # TODO(xsdg): The original code had what was likely a typo here,
-                # in that this called `self.select_device()`, which did not
-                # exist.  It likely was supposed to be `self.select_a_device()`,
-                # but it's better to just start over, here.
                 raise Exception(
-                    "Internal error: Never worked; needs to be fixed.")
-                self.mkcc.select_device()
-                continue
+                    "Internal error: Invalid device index. Please try again.")
             break
 
-    def get_devices(self):
+    def get_devices(self) -> None:
         if self.mkcc.debug is True:
             print("def get_devices(self):")
 
         if self.mkcc.device_name:
             self.cast_to = self.mkcc.device_name
 
-        if self.cast_to not in self._chromecasts_by_name:
+        if not self.cast_to or self.cast_to not in self._chromecasts_by_name:
             self.cast = None
             print(colors.warning(f"No Chromecast found named {self.cast_to}"))
 
@@ -363,7 +358,7 @@ class Casting:
         if self.cast:
             self.cast.quit_app()
 
-    def volume_up(self):
+    def volume_up(self) -> Optional[float]:
         """Increment volume by 0.1 unless it is already maxed.
         Returns the new volume.
         """
@@ -371,10 +366,13 @@ class Casting:
             raise Exception("Internal error: not initialized.")
         if self.mkcc.debug is True:
             print("Increasing volume... \n")
-        volume = round(self.cast.status.volume_level, 1)
+        status = self.cast.status
+        if status is None:
+            return None
+        volume = round(status.volume_level, 1)
         return self.cast.set_volume(volume + 0.1)
 
-    def volume_down(self):
+    def volume_down(self) -> Optional[float]:
         """Decrement the volume by 0.1 unless it is already 0.
         Returns the new volume.
         """
@@ -382,7 +380,10 @@ class Casting:
             raise Exception("Internal error: not initialized.")
         if self.mkcc.debug is True:
             print("Decreasing volume... \n")
-        volume = round(self.cast.status.volume_level, 1)
+        status = self.cast.status
+        if status is None:
+            return None
+        volume = round(status.volume_level, 1)
         return self.cast.set_volume(volume - 0.1)
 
     @property
@@ -415,7 +416,7 @@ class Casting:
                 remove_sink()
             terminate()
 
-    def _hijack_cc_(self):
+    def _hijack_cc_(self) -> None:
         """Check if chromecast is disconnected and hijack.
 
         This function checks if the chromecast is online. Then, if the display
@@ -428,7 +429,8 @@ class Casting:
         ip = self.cast.socket_client.host  # valid since at least v3.0.0
 
         if ping_chromecast(ip) is True:  # The chromecast is online.
-            if str(self.cast.status.display_name) != "Default Media Receiver":
+            status = self.cast.status
+            if status and str(status.display_name) != "Default Media Receiver":
                 self.mkcc.device_name = self.cast_to
                 self.get_devices()
                 self.play_cast()

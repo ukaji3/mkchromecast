@@ -487,7 +487,7 @@ class menubar(QtWidgets.QMainWindow):
                     )
 
     def volume_cast(self):
-        self.sl = QtWidgets.QSlider(Qt.Horizontal)
+        self.sl = QtWidgets.QSlider(Qt.Orientation.Horizontal)
         self.sl.setMinimum(0)
         self.sl.setGeometry(
             30 * self.scale_factor,
@@ -495,7 +495,7 @@ class menubar(QtWidgets.QMainWindow):
             260 * self.scale_factor,
             70 * self.scale_factor,
         )
-        self.sl.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
+        self.sl.setWindowFlags(QtCore.Qt.WindowType.WindowStaysOnTopHint)
         try:
             self.maxvolset = 100
             self.sl.setMaximum(self.maxvolset)
@@ -562,10 +562,10 @@ class menubar(QtWidgets.QMainWindow):
     def updateready(self, message):
         print("update ready ?", message)
         updaterBox = QMessageBox()
-        updaterBox.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
+        updaterBox.setWindowFlags(QtCore.Qt.WindowType.WindowStaysOnTopHint)
         updaterBox.setIcon(QMessageBox.Information)
         # This option let you write rich text in pyqt5.
-        updaterBox.setTextFormat(Qt.RichText)
+        updaterBox.setTextFormat(Qt.TextFormat.RichText)
         if message == "None":
             updaterBox.setText("No network connection detected!")
             updaterBox.setInformativeText(
@@ -610,7 +610,7 @@ class menubar(QtWidgets.QMainWindow):
 
     def about_show(self):
         msgBox = QMessageBox()
-        msgBox.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
+        msgBox.setWindowFlags(QtCore.Qt.WindowType.WindowStaysOnTopHint)
         # This is useful when launching from git repo
         if os.path.exists("images/google.icns") is True:
             if _mkcc.platform == "Darwin":

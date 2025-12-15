@@ -56,25 +56,19 @@ if debug is True:
 
 # This is to take the youtube URL
 if _mkcc.operation == OpMode.YOUTUBE:
-    print(colors.options("The Youtube URL chosen: ") + _mkcc.youtube_url)
+    youtube_url = _mkcc.youtube_url or ""
+    print(colors.options("The Youtube URL chosen: ") + youtube_url)
 
-    try:
-        import urlparse
-
-        url_data = urlparse.urlparse(_mkcc.youtube_url)
-        query = urlparse.parse_qs(url_data.query)
-    except ImportError:
-        import urllib.parse
-
-        url_data = urllib.parse.urlparse(_mkcc.youtube_url)
-        query = urllib.parse.parse_qs(url_data.query)
+    import urllib.parse
+    url_data = urllib.parse.urlparse(youtube_url)
+    query = urllib.parse.parse_qs(url_data.query)
     video = query["v"][0]
     print(colors.options("Playing video:") + " " + video)
-    command = ["yt-dlp", "-o", "-", _mkcc.youtube_url]
+    command = ["yt-dlp", "-o", "-", youtube_url]
     media_type = "audio/mp4"
 else:
     backend.name = _mkcc.backend
-    backend.path = backend.name    
+    backend.path = _mkcc.backend or ""
 
     # TODO(xsdg): Why is this only run in tray mode???
     if _mkcc.operation == OpMode.TRAY and backend.name in {"ffmpeg", "parec"}:

@@ -243,9 +243,9 @@ if _mkcc.operation == OpMode.TRAY:
                 # This is to fix the size of the window
                 self.setFixedSize(282 * self.scale_factor, 320 * self.scale_factor)
             self.setWindowFlags(
-                QtCore.Qt.WindowCloseButtonHint
-                | QtCore.Qt.WindowMinimizeButtonHint
-                | QtCore.Qt.WindowStaysOnTopHint
+                QtCore.Qt.WindowType.WindowCloseButtonHint
+                | QtCore.Qt.WindowType.WindowMinimizeButtonHint
+                | QtCore.Qt.WindowType.WindowStaysOnTopHint
             )
             self.setWindowTitle("Mkchromecast Preferences")
 

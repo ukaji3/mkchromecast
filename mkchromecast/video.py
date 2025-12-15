@@ -16,7 +16,7 @@ from mkchromecast import stream_infra
 from mkchromecast import utils
 from mkchromecast.constants import OpMode
 
-def _flask_init():
+def _flask_init() -> None:
     mkcc = mkchromecast.Mkchromecast()
 
     # TODO(xsdg): Passing args in one-by-one to facilitate refactoring
@@ -41,14 +41,23 @@ def _flask_init():
         print(f":::ffmpeg::: pipeline_builder command: {builder.command}")
 
     media_type = mkcc.mtype or "video/mp4"
+    # Convert command to list[str] if needed
+    cmd = builder.command
+    if isinstance(cmd, str):
+        cmd_list: list[str] = [cmd]
+    elif hasattr(cmd, '__fspath__'):
+        cmd_list = [str(cmd)]
+    else:
+        cmd_list = list(cmd)
+    
     stream_infra.FlaskServer.init_video(
         chunk_size=mkcc.chunk_size,
-        command=builder.command,
-        media_type=(mkcc.mtype or "video/mp4")
+        command=cmd_list,
+        media_type=media_type
     )
 
 
-def main():
+def main() -> None:
     mkcc = mkchromecast.Mkchromecast()
     ip = utils.get_effective_ip(
         mkcc.platform, host_override=mkcc.host, fallback_ip="0.0.0.0")
@@ -92,23 +101,32 @@ def main():
             node_names.append("nodejs")
             nodejs_dir.append("/usr/share/mkchromecast/nodejs/")
 
+        webcast: list[str] = []
         for name in node_names:
             if utils.is_installed(name, PATH, mkcc.debug):
-                for path in nodejs_dir:
-                    if os.path.isdir(path):
-                        path = path + "html5-video-streamer.js"
-                        webcast = [name, path, mkcc.input_file]
+                for nodejs_path in nodejs_dir:
+                    if os.path.isdir(nodejs_path):
+                        script_path = nodejs_path + "html5-video-streamer.js"
+                        if mkcc.input_file:
+                            webcast = [name, script_path, mkcc.input_file]
                         break
+                if webcast:
+                    break
 
-        try:
-            subprocess.Popen(webcast)
-        except:
-            # TODO(xsdg): Capture a specific exception here.
+        if not webcast:
             print(
                 colors.warning(
                     "Nodejs is not installed in your system. "
                     "Please, install it to use this backend."
                 )
             )
+            print(colors.warning("Closing the application..."))
+            utils.terminate()
+            return
+
+        try:
+            subprocess.Popen(webcast)
+        except Exception as e:
+            print(colors.warning(f"Failed to start node: {e}"))
             print(colors.warning("Closing the application..."))
             utils.terminate()
