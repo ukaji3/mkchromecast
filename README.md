@@ -114,7 +114,8 @@ following:
 
 #### Linux
 
-* Pulseaudio.
+* PulseAudio or PipeWire with pipewire-pulse.
+* pulseaudio-utils (provides `pactl` command, required for both PulseAudio and PipeWire).
 * Pavucontrol.
 * Python3 (if using the official debian package).
 * pychromecast.
