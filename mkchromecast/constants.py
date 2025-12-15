@@ -1,7 +1,6 @@
 # This file is part of mkchromecast.
 
 import enum
-from typing import List
 
 
 @enum.unique
@@ -24,7 +23,7 @@ MAX_48K_SAMPLE_RATES = [22050, 32000, 44100, 48000]
 ALL_SAMPLE_RATES = MAX_48K_SAMPLE_RATES + [88200, 96000, 176000, 192000]
 QUANTIZED_SAMPLE_RATE_CODECS = ["mp3", "ogg", "aac", "opus", "wav", "flac"]
 
-def sample_rates_for_codec(codec: str) -> List[int]:
+def sample_rates_for_codec(codec: str) -> list[int]:
     """Returns the appropriate sample rates for the given codec."""
     if codec in MAX_48K_CODECS:
         return MAX_48K_SAMPLE_RATES
@@ -37,7 +36,7 @@ LINUX_VIDEO_BACKENDS = ["node", "ffmpeg"]
 LINUX_BACKENDS = ["ffmpeg", "parec"]
 ALL_BACKENDS = ["node", "ffmpeg", "parec"]
 
-def backend_options_for_platform(platform: str, video: bool = False):
+def backend_options_for_platform(platform: str, video: bool = False) -> list[str]:
     if platform == "Darwin":
         return DARWIN_BACKENDS
 

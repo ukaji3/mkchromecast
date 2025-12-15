@@ -1,18 +1,19 @@
 # This file is part of mkchromecast.
 
 import subprocess
-import time
 import re
+from typing import Optional
 
-_sink_num = None
+_sink_num: Optional[list[int]] = None
 
 
-def create_sink():
+def create_sink() -> None:
+    """Create a PulseAudio null sink for Mkchromecast."""
     global _sink_num
 
     sink_name = "Mkchromecast"
 
-    create_sink = [
+    create_sink_cmd = [
         "pactl",
         "load-module",
         "module-null-sink",
@@ -20,30 +21,33 @@ def create_sink():
         "sink_properties=device.description=" + sink_name,
     ]
 
-    cs = subprocess.Popen(create_sink, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    cs = subprocess.Popen(create_sink_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     csoutput, cserror = cs.communicate()
-    _sink_num = csoutput[:-1]
+    
+    # Parse the module number from output
+    if csoutput:
+        try:
+            module_num = int(csoutput.decode("utf-8").strip())
+            _sink_num = [module_num]
+        except (ValueError, UnicodeDecodeError):
+            _sink_num = None
 
-    return
 
-
-def remove_sink():
+def remove_sink() -> None:
+    """Remove all Mkchromecast PulseAudio sinks."""
     global _sink_num
 
     if _sink_num is None:
         return
 
-    if not isinstance(_sink_num, list):
-        _sink_num = [_sink_num]
-
     for num in _sink_num:
-        remove_sink = [
+        remove_sink_cmd = [
             "pactl",
             "unload-module",
-            num.decode("utf-8") if type(num) == bytes else str(num),
+            str(num),
         ]
-        rms = subprocess.run(
-            remove_sink,
+        subprocess.run(
+            remove_sink_cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             timeout=60,
@@ -51,29 +55,26 @@ def remove_sink():
         )
 
 
-def check_sink():
+def check_sink() -> Optional[bool]:
+    """Check if Mkchromecast sink exists.
+    
+    Returns:
+        True if sink exists, False if not, None if pactl not found.
+    """
     try:
-        check_sink = ["pactl", "list", "sinks"]
+        check_sink_cmd = ["pactl", "list", "sinks"]
         chk = subprocess.Popen(
-            check_sink, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            check_sink_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         chkoutput, chkerror = chk.communicate()
     except FileNotFoundError:
         return None
 
-    try:
-        if "Mkchromecast" in chkoutput:
-            return True
-        else:
-            return False
-    except TypeError:
-        if "Mkchromecast" in chkoutput.decode("utf-8"):
-            return True
-        else:
-            return False
+    output_str = chkoutput.decode("utf-8") if chkoutput else ""
+    return "Mkchromecast" in output_str
 
 
-def get_sink_list():
+def get_sink_list() -> None:
     """Get a list of sinks with a name prefix of Mkchromecast and save to _sink_num.
 
     Used to clear any residual sinks from previous failed actions. The number
@@ -91,6 +92,7 @@ def get_sink_list():
         + r"\s*?$(?:\n^.*?$)*?\n^\s*?Owner Module: (?P<module>\d+?)\s*?$",
         re.MULTILINE,
     )
-    matches = pattern.findall(result.stdout.decode("utf-8"), re.MULTILINE)
+    output_str = result.stdout.decode("utf-8") if result.stdout else ""
+    matches = pattern.findall(output_str, re.MULTILINE)
 
     _sink_num = [int(i) for i in matches]

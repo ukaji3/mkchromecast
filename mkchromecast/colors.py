@@ -1,13 +1,17 @@
 # This file is part of mkchromecast.
 # Credits to https://gist.github.com/Jossef/0ee20314577925b4027f
 
-try:
-    unicode  # Python 2
-except NameError:
-    unicode = str  # Python 3
 
-
-def color(text, **user_styles):
+def color(text: str, **user_styles) -> str:
+    """Apply ANSI color codes to text.
+    
+    Args:
+        text: The text to colorize.
+        **user_styles: Style keywords (e.g., bold=True, fg_red=True).
+    
+    Returns:
+        The text wrapped with ANSI escape codes.
+    """
     styles = {
         # styles
         "reset": "\033[0m",
@@ -49,34 +53,31 @@ def color(text, **user_styles):
         try:
             color_text += styles[style]
         except KeyError:
-            raise KeyError("def color: parameter `{}` does not exist".format(style))
+            raise KeyError(f"def color: parameter `{style}` does not exist")
 
     color_text += text
-    try:
-        return "\033[0m{}\033[0m".format(color_text)
-    except UnicodeEncodeError:
-        return "\033[0m{}\033[0m".format(unicode(color_text).encode("utf-8"))
+    return f"\033[0m{color_text}\033[0m"
 
 
-def error(text):
+def error(text: str) -> str:
     return color(text, bold=True, fg_red=True)
 
 
-def important(text):
+def important(text: str) -> str:
     return color(text, bold=False, fg_blue=True)
 
 
-def options(text):
+def options(text: str) -> str:
     return color(text, underline=True)
 
 
-def bold(text):
+def bold(text: str) -> str:
     return color(text, bold=True)
 
 
-def warning(text):
+def warning(text: str) -> str:
     return color(text, fg_orange=True)
 
 
-def success(text):
+def success(text: str) -> str:
     return color(text, fg_green=True)

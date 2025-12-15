@@ -122,6 +122,8 @@ class FlaskServer:
 
         # Original comment: Note that passthrough_errors=False is useful when
         # reconnecting. In that way, flask won't die.
+        if FlaskServer._app is None:
+            raise Exception("Flask app not initialized")
         FlaskServer._app.run(host=host, port=port, passthrough_errors=False)
 
     @staticmethod
@@ -174,11 +176,13 @@ class FlaskServer:
         FlaskServer._ensure_video_mode()
 
         process = Popen(FlaskServer._command, stdout=PIPE, bufsize=-1)
+        if process.stdout is None:
+            raise Exception("Failed to open stdout pipe for video stream")
         read_chunk = partial(os.read, process.stdout.fileno(), FlaskServer._chunk_size)
         return flask.Response(iter(read_chunk, b""), mimetype=FlaskServer._media_type)
 
     @staticmethod
-    def _stream_audio():
+    def _stream_audio() -> flask.Response:
         FlaskServer._ensure_audio_mode()
 
         if (
@@ -192,12 +196,15 @@ class FlaskServer:
             try:
                 process = Popen(FlaskServer._command, stdin=parec.stdout, stdout=PIPE, bufsize=-1)
             except FileNotFoundError:
-                print("Failed to execute {}".format(FlaskServer._command))
+                print(f"Failed to execute {FlaskServer._command}")
                 message = "Have you installed lame, see https://github.com/muammar/mkchromecast#linux-1?"
                 raise Exception(message)
 
         else:
             process = Popen(FlaskServer._command, stdout=PIPE, bufsize=-1)
+        
+        if process.stdout is None:
+            raise Exception("Failed to open stdout pipe for audio stream")
         read_chunk = partial(os.read, process.stdout.fileno(), FlaskServer._buffer_size)
         return flask.Response(iter(read_chunk, b""), mimetype=FlaskServer._media_type)
 

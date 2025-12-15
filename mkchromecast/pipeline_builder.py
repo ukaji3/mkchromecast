@@ -85,6 +85,9 @@ class Audio:
             return cmd
 
     def _build_ffmpeg_command(self) -> list[str]:
+        if self._backend.path is None:
+            raise Exception("ffmpeg backend path is not set")
+            
         fmt = self._settings.codec
         # Special case: the ffmpeg format for AAC is ADTS
         if self._settings.codec == "aac":
@@ -239,7 +242,8 @@ class Video:
     @property
     def command(self) -> SubprocessCommand:
         if self._settings.operation == OpMode.YOUTUBE:
-            return ["yt-dlp", "-o", "-", self._settings.youtube_url]
+            youtube_url = self._settings.youtube_url or ""
+            return ["yt-dlp", "-o", "-", youtube_url]
 
         if self._settings.operation == OpMode.SCREENCAST:
             return self._screencast_command()
