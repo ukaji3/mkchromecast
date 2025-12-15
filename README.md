@@ -109,7 +109,7 @@ following:
 
 * flask (optional).
 * ffmpeg (optional).
-* yt-dlp (option if you plan to cast youtube URLs or [supported
+* yt-dlp (optional if you plan to cast YouTube URLs or [supported
   websites](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md)).
 
 #### Linux
@@ -128,7 +128,7 @@ following:
 * faac.
 * ffmpeg (optional).
 * PyQt5 (optional if you want to use the system tray menu).
-* yt-dlp (option if you plan to cast youtube URLs or [supported
+* yt-dlp (optional if you plan to cast YouTube URLs or [supported
   websites](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md)).
 * soco (this module adds Sonos support to Mkchromecast).
 
@@ -151,7 +151,7 @@ requirements are:
 * faac.
 * ffmpeg.
 * PyQt5 (optional if you want to use the system tray menu).
-* yt-dlp (option if you plan to cast youtube URLs or [supported
+* yt-dlp (optional if you plan to cast YouTube URLs or [supported
   websites](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md)).
 * soco (this module adds Sonos support to Mkchromecast).
 
@@ -508,9 +508,9 @@ The system tray application can perform all the actions from the aforementioned
 commands. To get an idea, please check the [Youtube video
 here](https://github.com/muammar/mkchromecast#macos).
 
-#### Playing Youtube URLs in Google Cast devices
+#### Playing YouTube URLs in Google Cast devices
 
-You can play Youtube URLs (or [other
+You can play YouTube URLs (or [other
 sites](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md)) headlessly from
 the command line:
 
