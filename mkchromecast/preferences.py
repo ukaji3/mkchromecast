@@ -358,6 +358,6 @@ if _mkcc.operation == OpMode.TRAY:
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    p = preferences()
+    p = preferences(scale_factor=1)
     p.show()
     sys.exit(app.exec_())

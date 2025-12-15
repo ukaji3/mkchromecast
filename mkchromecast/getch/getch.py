@@ -1,5 +1,5 @@
 try:
-    from msvcrt import getch
+    from msvcrt import getch  # type: ignore[attr-defined]  # Windows only
 except ImportError:
 
     def getch():
