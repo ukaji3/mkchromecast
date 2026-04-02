@@ -105,6 +105,21 @@ class Casting:
         # See commit 18005ebd4c96faccd69757bf3d126eb145687e0d.
         from pychromecast import socket_client
 
+        # Direct connection by IP address, bypassing mDNS discovery
+        if self.mkcc.device_ip:
+            import uuid
+            print(colors.options("Connecting directly to IP:") + " " +
+                  colors.success(self.mkcc.device_ip))
+            host = (self.mkcc.device_ip, 8009, uuid.uuid4(), None, None)
+            self.cast = pychromecast.get_chromecast_from_host(
+                host, tries=self.mkcc.tries)
+            self.cast.wait()
+            self.cast_to = self.cast.name or self.mkcc.device_ip
+            self.cclist = [[0, self.cast_to, "Gcast"]]
+            print(colors.success(f"Connected to {self.cast_to}"))
+            print()
+            return
+
         tmp_cclist = self._get_chromecast_names()
         self.cclist = [[i, name, "Gcast"] for i, name in enumerate(tmp_cclist)]
 
@@ -231,6 +246,10 @@ class Casting:
     def get_devices(self) -> None:
         if self.mkcc.debug is True:
             print("def get_devices(self):")
+
+        # Already connected via --device-ip
+        if self.cast and self.mkcc.device_ip:
+            return
 
         if self.mkcc.device_name:
             self.cast_to = self.mkcc.device_name

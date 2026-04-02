@@ -298,6 +298,19 @@ Parser.add_argument(
 )
 
 Parser.add_argument(
+    "--device-ip",
+    type=str,
+    default=None,
+    help="""
+    Connect to a cast device by IP address, bypassing mDNS discovery.
+    Useful when the device is on a different subnet or discovery fails.
+
+    Example:
+        python mkchromecast.py --device-ip 192.168.1.100
+    """,
+)
+
+Parser.add_argument(
     "--notifications",
     action="store_true",
     help="""

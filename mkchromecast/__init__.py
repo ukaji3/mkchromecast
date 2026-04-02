@@ -88,6 +88,7 @@ class Mkchromecast:
         self.subtitles: Optional[str] = args.subtitles
         self.hijack: bool = args.hijack
         self.device_name: Optional[str] = args.name
+        self.device_ip: Optional[str] = args.device_ip
         self.port: int = args.port  # TODO(xsdg): Validate range 0..65535.
         self.fps: str = args.fps  # TODO(xsdg): Why is this typed as a str?
 
