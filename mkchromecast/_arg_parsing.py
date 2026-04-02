@@ -203,6 +203,10 @@ Parser.add_argument(
     help="""
     Set the DISPLAY for screen captures.  Defaults to current environment
     value of DISPLAY or ':0' if DISPLAY is unset.
+
+    To capture a specific monitor, include the offset:
+        --display :0+1920,0    (second monitor at x=1920)
+    Use 'xrandr' to find monitor geometry.
     """,
 )
 

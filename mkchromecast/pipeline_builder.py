@@ -281,7 +281,7 @@ class Video:
                 "-f", "x11grab",
                 "-r", self._settings.fps,
                 "-s", screen_size,
-                "-i", "{}+0,0".format(self._settings.display),
+                "-i", self._settings.display if "+" in (self._settings.display or "") else "{}+0,0".format(self._settings.display),
                 "-vcodec", self._settings.vcodec,
                 *maybe_veryfast_cmd,
                 "-tune", "zerolatency",
