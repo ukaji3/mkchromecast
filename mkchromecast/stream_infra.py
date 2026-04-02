@@ -55,6 +55,7 @@ class FlaskServer:
     _codec: str
     _platform: str
     _samplerate: str
+    _ytdlp_command: Optional[list[str]] = None
 
     # Video arguments.
     _chunk_size: int
@@ -86,7 +87,8 @@ class FlaskServer:
                    command: Union[str, list[str]],
                    media_type: str,
                    platform: str,
-                   samplerate: str) -> None:
+                   samplerate: str,
+                   ytdlp_command: Optional[list[str]] = None) -> None:
         FlaskServer._init_common(video_mode=False)
 
         FlaskServer._adevice = adevice
@@ -98,6 +100,7 @@ class FlaskServer:
         FlaskServer._media_type = media_type
         FlaskServer._platform = platform
         FlaskServer._samplerate = samplerate
+        FlaskServer._ytdlp_command = ytdlp_command
 
     @staticmethod
     def init_video(chunk_size: int,
@@ -199,6 +202,11 @@ class FlaskServer:
                 print(f"Failed to execute {FlaskServer._command}")
                 message = "Have you installed lame, see https://github.com/muammar/mkchromecast#linux-1?"
                 raise Exception(message)
+
+        elif FlaskServer._ytdlp_command:
+            # yt-dlp → ffmpeg pipe chain for YouTube/playlist streaming
+            ytdlp = Popen(FlaskServer._ytdlp_command, stdout=PIPE)
+            process = Popen(FlaskServer._command, stdin=ytdlp.stdout, stdout=PIPE, bufsize=-1)
 
         else:
             process = Popen(FlaskServer._command, stdout=PIPE, bufsize=-1)

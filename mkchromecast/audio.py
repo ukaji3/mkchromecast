@@ -7,7 +7,7 @@ Google Cast device has to point out to http://ip:5000/stream
 import os
 import re
 import shutil
-from typing import Union
+from typing import Optional, Union
 
 import mkchromecast
 from mkchromecast import colors
@@ -64,8 +64,23 @@ if _mkcc.operation == OpMode.YOUTUBE:
     query = urllib.parse.parse_qs(url_data.query)
     video = query["v"][0] if "v" in query else youtube_url
     print(colors.options("Playing video:") + " " + video)
-    command = ["yt-dlp", "-o", "-", youtube_url]
-    media_type = "audio/mp4"
+
+    playlist_urls = utils.get_playlist_urls(youtube_url)
+    if len(playlist_urls) > 1:
+        print(colors.options(f"Playlist detected: {len(playlist_urls)} items"))
+
+    # Use ffmpeg to re-mux yt-dlp output into a continuous mp3 stream.
+    # This enables playlist support by normalizing the audio format.
+    if shutil.which("ffmpeg"):
+        command = [
+            "ffmpeg", "-i",
+            "async:pipe:0" if len(playlist_urls) > 1 else "pipe:0",
+            "-f", "mp3", "-ab", "192k", "-v", "quiet", "pipe:1",
+        ]
+        media_type = "audio/mpeg"
+    else:
+        command = ["yt-dlp", "-o", "-", youtube_url]
+        media_type = "audio/mp4"
 else:
     backend.name = _mkcc.backend
     backend.path = _mkcc.backend or ""
@@ -120,6 +135,12 @@ if debug is True:
     print(":::audio::: command " + str(command))
 
 
+# yt-dlp command for pipe chain (YouTube + ffmpeg mode)
+ytdlp_command: Optional[list[str]] = None
+if _mkcc.operation == OpMode.YOUTUBE and shutil.which("ffmpeg"):
+    ytdlp_command = ["yt-dlp", "-o", "-", youtube_url]
+
+
 def _flask_init():
     # TODO(xsdg): Update init_audio to take an EncodeSettings.
     stream_infra.FlaskServer.init_audio(
@@ -131,7 +152,8 @@ def _flask_init():
         command=command,
         media_type=media_type,
         platform=platform,
-        samplerate=encode_settings.samplerate)
+        samplerate=encode_settings.samplerate,
+        ytdlp_command=ytdlp_command)
 
 
 def main():

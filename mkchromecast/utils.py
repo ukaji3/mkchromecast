@@ -258,3 +258,36 @@ def _get_first_network_ip_by_netifaces():
         if iface != None and iface[0]["addr"] != "127.0.0.1":
             for e in iface:
                 return str(e["addr"])
+
+
+def get_playlist_urls(url: str) -> list[str]:
+    """Extract individual URLs from a playlist using yt-dlp.
+
+    Returns a list of URLs. For single videos, returns a one-element list.
+    """
+    import json
+    import subprocess
+
+    try:
+        result = subprocess.run(
+            ["yt-dlp", "--flat-playlist", "-J", "--no-download", url],
+            capture_output=True, text=True, timeout=30,
+        )
+        if result.returncode != 0:
+            return [url]
+        data = json.loads(result.stdout)
+    except Exception:
+        return [url]
+
+    if data.get("_type") == "playlist" and data.get("entries"):
+        urls = []
+        for entry in data["entries"]:
+            if entry.get("url"):
+                entry_url = entry["url"]
+                # yt-dlp flat-playlist may return just video IDs
+                if not entry_url.startswith("http"):
+                    entry_url = f"https://www.youtube.com/watch?v={entry_url}"
+                urls.append(entry_url)
+        return urls if urls else [url]
+
+    return [url]
