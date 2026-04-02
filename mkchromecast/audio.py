@@ -62,7 +62,7 @@ if _mkcc.operation == OpMode.YOUTUBE:
     import urllib.parse
     url_data = urllib.parse.urlparse(youtube_url)
     query = urllib.parse.parse_qs(url_data.query)
-    video = query["v"][0]
+    video = query["v"][0] if "v" in query else youtube_url
     print(colors.options("Playing video:") + " " + video)
     command = ["yt-dlp", "-o", "-", youtube_url]
     media_type = "audio/mp4"
