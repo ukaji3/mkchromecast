@@ -161,9 +161,8 @@ class Mkchromecast:
         if not args.command:
             self.command = None
         else:
-            # TODO(xsdg): Unbreak this so that it can accept a full command
-            # string, and not just a command name.
-            if args.command not in command_choices:
+            cmd_name = args.command.split()[0] if args.command.split() else ""
+            if os.path.basename(cmd_name) not in command_choices:
                 print(colors.options(f"Configured command: {args.command}"))
                 print(colors.error("Supported commands are: "))
                 for command in command_choices:
